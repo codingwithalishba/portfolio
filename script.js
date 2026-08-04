@@ -1,113 +1,191 @@
-// =========================
-// Typing Effect
-// =========================
+// =============================
+// Calculator Pro - script.js
+// =============================
 
-const text = [
-"Frontend Developer",
-"HTML | CSS | JavaScript",
-"Always Learning 🚀"
-];
+const display = document.getElementById("display");
+const buttons = document.querySelectorAll(".buttons button");
 
-let count = 0;
-let index = 0;
-let currentText = "";
-let letter = "";
+const historyList = document.getElementById("historyList");
+const clearHistory = document.getElementById("clearHistory");
 
-(function type(){
+let expression = "";
 
-if(count === text.length){
+// =============================
+// Load Saved History
+// =============================
 
-count = 0;
+loadHistory();
 
-}
+// =============================
+// Button Click Events
+// =============================
 
-currentText = text[count];
+buttons.forEach((button) => {
 
-letter = currentText.slice(0, ++index);
+    button.addEventListener("click", () => {
 
-const heading = document.querySelector(".hero-text h2");
+        const value = button.dataset.value;
 
-if(heading){
+        switch (value) {
 
-heading.textContent = letter;
+            case "AC":
+                expression = "";
+                display.value = "";
+                break;
 
-}
+            case "DEL":
+                expression = expression.slice(0, -1);
+                display.value = expression;
+                break;
 
-if(letter.length === currentText.length){
+            case "=":
+                calculate();
+                break;
 
-count++;
+            default:
+                expression += value;
+                display.value = expression;
+        }
 
-index = 0;
-
-setTimeout(type,1200);
-
-}else{
-
-setTimeout(type,90);
-
-}
-
-})();
-// =========================
-// Scroll To Top
-// =========================
-
-const topBtn=document.getElementById("topBtn");
-
-window.addEventListener("scroll",()=>{
-
-if(window.scrollY>300){
-
-topBtn.style.display="block";
-
-}else{
-
-topBtn.style.display="none";
-
-}
+    });
 
 });
 
-topBtn.onclick=()=>{
+// =============================
+// Calculate
+// =============================
 
-window.scrollTo({
+function calculate() {
 
-top:0,
+    if (expression === "") return;
 
-behavior:"smooth"
+    try {
 
-});
+        const originalExpression = expression;
 
-};
+        const result = eval(expression);
 
-// =========================
-// Reveal Animation
-// =========================
+        display.value = result;
 
-const observer=new IntersectionObserver(entries=>{
+        expression = result.toString();
 
-entries.forEach(entry=>{
+        addHistory(originalExpression, result);
 
-if(entry.isIntersecting){
+    }
 
-entry.target.style.opacity=1;
+    catch {
 
-entry.target.style.transform="translateY(0)";
+        display.value = "Error";
+        expression = "";
+
+    }
 
 }
 
-});
+// =============================
+// Add History
+// =============================
+
+function addHistory(exp, result) {
+
+    const item = document.createElement("li");
+
+    item.textContent = `${exp} = ${result}`;
+
+    historyList.prepend(item);
+
+    saveHistory();
+
+}
+
+// =============================
+// Save History
+// =============================
+
+function saveHistory() {
+
+    localStorage.setItem(
+        "calculatorHistory",
+        historyList.innerHTML
+    );
+
+}
+
+// =============================
+// Load History
+// =============================
+
+function loadHistory() {
+
+    const saved = localStorage.getItem("calculatorHistory");
+
+    if (saved) {
+
+        historyList.innerHTML = saved;
+
+    }
+
+}
+
+// =============================
+// Clear History
+// =============================
+
+clearHistory.addEventListener("click", () => {
+
+    historyList.innerHTML = "";
+
+    localStorage.removeItem("calculatorHistory");
 
 });
 
-document.querySelectorAll("section").forEach(sec=>{
+// =============================
+// Keyboard Support
+// =============================
 
-sec.style.opacity=0;
+document.addEventListener("keydown", (e) => {
 
-sec.style.transform="translateY(50px)";
+    const allowed = [
+        "+",
+        "-",
+        "*",
+        "/",
+        "%",
+        "."
+    ];
 
-sec.style.transition=".8s";
+    if (
+        (e.key >= "0" && e.key <= "9") ||
+        allowed.includes(e.key)
+    ) {
 
-observer.observe(sec);
+        expression += e.key;
+        display.value = expression;
+
+    }
+
+    else if (e.key === "Enter") {
+
+        e.preventDefault();
+
+        calculate();
+
+    }
+
+    else if (e.key === "Backspace") {
+
+        expression = expression.slice(0, -1);
+
+        display.value = expression;
+
+    }
+
+    else if (e.key === "Escape") {
+
+        expression = "";
+
+        display.value = "";
+
+    }
 
 });
